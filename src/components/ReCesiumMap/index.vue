@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import {
+  computed,
+  markRaw,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef
+} from "vue";
 import type { Viewer } from "cesium";
 import { createViewer, destroyViewer } from "@/utils/cesium/viewer";
 import { getMapStyle } from "@/utils/cesium/helpers";
@@ -27,7 +34,7 @@ const emit = defineEmits<{
 }>();
 
 const containerRef = ref<HTMLDivElement>();
-const viewerRef = ref<Viewer | null>(null);
+const viewerRef = shallowRef<Viewer | null>(null);
 const errorMessage = ref("");
 
 const containerStyle = computed(() => getMapStyle(props));
@@ -45,7 +52,9 @@ async function init() {
   if (!containerRef.value) return;
   errorMessage.value = "";
   try {
-    viewerRef.value = createViewer(containerRef.value, props.viewerOptions);
+    viewerRef.value = markRaw(
+      createViewer(containerRef.value, props.viewerOptions)
+    );
     emit("ready", viewerRef.value);
   } catch (error) {
     destroy();

@@ -49,9 +49,18 @@ export function createViewer(
 
 export function destroyViewer(viewer?: Viewer | null) {
   if (!viewer) return;
-  viewer.entities.removeAll();
-  viewer.dataSources.removeAll(true);
-  viewer.imageryLayers.removeAll(true);
+
+  // Route switches can trigger multiple unmount hooks; skip when already destroyed.
+  if (typeof viewer.isDestroyed === "function" && viewer.isDestroyed()) return;
+
+  try {
+    viewer.entities.removeAll();
+    viewer.dataSources.removeAll(true);
+    viewer.imageryLayers.removeAll(true);
+  } catch {
+    // Ignore cleanup errors if Cesium internals are already released.
+  }
+
   safeDestroy(viewer.screenSpaceEventHandler);
   safeDestroy(viewer);
 }

@@ -1,13 +1,13 @@
-import { onBeforeUnmount, ref } from "vue";
+import { markRaw, onBeforeUnmount, ref, shallowRef } from "vue";
 import type { Viewer } from "cesium";
 import { destroyViewer } from "@/utils/cesium/viewer";
 
 export function useCesiumViewer() {
-  const viewer = ref<Viewer | null>(null);
+  const viewer = shallowRef<Viewer | null>(null);
   const ready = ref(false);
 
   function setViewer(instance: Viewer) {
-    viewer.value = instance;
+    viewer.value = markRaw(instance);
     ready.value = true;
   }
 

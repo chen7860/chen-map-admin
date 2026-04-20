@@ -1,6 +1,7 @@
 import { Ion } from "cesium";
 
-Ion.defaultAccessToken = "";
+Ion.defaultAccessToken =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlMTdlM2QyYi0yMGE2LTQ3N2YtOTY5ZS03NTgxYjlmZDRhZGYiLCJpZCI6NDIwNDU5LCJpYXQiOjE3NzY2NTEzMzd9.dnsoJXyvGobaEKkj7ZOGMxYUU1d4yg3Ne4fJ2fNeAkU";
 
 export const defaultViewerOptions = {
   shouldAnimate: true,
