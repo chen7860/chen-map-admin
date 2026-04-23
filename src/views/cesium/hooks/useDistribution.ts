@@ -1,60 +1,41 @@
-import {
-  Cartesian3,
-  Color,
-  type Entity,
-  ScreenSpaceEventHandler,
-  ScreenSpaceEventType,
-  type Viewer
-} from "cesium";
-
-const distributionPoints = [
-  { id: "beijing", name: "北京", position: [116.4074, 39.9042], color: "#409eff" },
-  { id: "shanghai", name: "上海", position: [121.4737, 31.2304], color: "#67c23a" },
-  { id: "guangzhou", name: "广州", position: [113.2644, 23.1291], color: "#e6a23c" },
-  { id: "shenzhen", name: "深圳", position: [114.0579, 22.5431], color: "#f56c6c" }
-];
+import type { Entity, ScreenSpaceEventHandler, Viewer } from "cesium";
+import DynamicImage from "@/utils/cesium/dynamicImage/index";
+import { getWeather } from "@/api/weather";
 
 export function useDistribution() {
   const entities: Entity[] = [];
+  let matrixPic: DynamicImage | null = null;
   let clickHandler: ScreenSpaceEventHandler | null = null;
 
   function init(viewer: Viewer) {
-    viewer.entities.removeAll();
+    getData(viewer);
+  }
 
-    distributionPoints.forEach(point => {
-      const entity = viewer.entities.add({
-        id: point.id,
-        name: point.name,
-        position: Cartesian3.fromDegrees(point.position[0], point.position[1], 0),
-        point: {
-          pixelSize: 14,
-          color: Color.fromCssColorString(point.color),
-          outlineColor: Color.WHITE,
-          outlineWidth: 2
-        },
-        label: {
-          text: point.name,
-          fillColor: Color.WHITE,
-          showBackground: true,
-          backgroundColor: Color.fromCssColorString("#1f2d3d").withAlpha(0.8),
-          pixelOffset: new Cartesian3(0, -24, 0)
-        }
-      });
+  async function getData(viewer: Viewer) {
+    try {
+      const data = await getWeather();
+      addMatrixImage(data, viewer);
+    } catch (error) {
+      console.error("Error fetching JSON data:", error);
+    }
+  }
 
-      entities.push(entity);
-    });
-
-    viewer.camera.flyTo({
-      destination: Cartesian3.fromDegrees(108, 33, 6000000)
-    });
-
-    clickHandler = new ScreenSpaceEventHandler(viewer.scene.canvas);
-    clickHandler.setInputAction(movement => {
-      const picked = viewer.scene.pick(movement.position);
-      if (!picked || !("id" in picked) || !picked.id) return;
-      const pickedEntity = picked.id as Entity;
-      viewer.selectedEntity = pickedEntity;
-    }, ScreenSpaceEventType.LEFT_CLICK);
+  function addMatrixImage(res: any, viewer?: Viewer) {
+    if (matrixPic) {
+      matrixPic.clear();
+      matrixPic = null;
+    }
+    matrixPic = new DynamicImage(
+      viewer,
+      res.matrix,
+      {
+        minLon: res.bbox[0],
+        maxLon: res.bbox[2],
+        minLat: res.bbox[1],
+        maxLat: res.bbox[3]
+      },
+      res.legend
+    );
   }
 
   function destroy(viewer?: Viewer | null) {

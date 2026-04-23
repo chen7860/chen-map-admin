@@ -22,6 +22,14 @@ export default {
       meta: {
         title: "自定义材质"
       }
+    },
+    {
+      path: "/cesium/drawCurve",
+      name: "CesiumDrawCurve",
+      component: () => import("@/views/cesium/drawCurve/index.vue"),
+      meta: {
+        title: "绘制图形"
+      }
     }
   ]
 } satisfies RouteConfigsTable;

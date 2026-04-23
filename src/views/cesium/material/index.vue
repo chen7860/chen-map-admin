@@ -24,11 +24,20 @@ function handleError(error: unknown) {
 
 <template>
   <div class="cesium-page">
-    <ReCesiumMap
-      height="calc(100vh - 200px)"
-      @ready="handleReady"
-      @error="handleError"
-    />
+    <div class="cesium-page__toolbar">
+      <el-button
+        type="primary"
+        @click="() => materialDemo.startDrawing(viewer)"
+      >
+        开始绘制流动线
+      </el-button>
+      <el-button type="danger" plain @click="() => materialDemo.clearPath()">
+        清除轨迹
+      </el-button>
+    </div>
+    <div class="cesium-page__map">
+      <ReCesiumMap height="100%" @ready="handleReady" @error="handleError" />
+    </div>
   </div>
 </template>
 
@@ -37,6 +46,26 @@ function handleError(error: unknown) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: calc(100vh - 120px);
+
+  .cesium-page__toolbar {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    z-index: 1;
+  }
+
+  &__toolbar {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__map {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+  }
 
   &__header {
     h1 {

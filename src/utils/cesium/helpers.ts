@@ -1,4 +1,4 @@
-import type { Viewer } from "cesium";
+import { Cartesian3, type Viewer } from "cesium";
 
 export interface CesiumMapSize {
   width?: string | number;
@@ -21,7 +21,11 @@ export function getMapStyle(size: CesiumMapSize) {
 }
 
 export function setDefaultView(viewer: Viewer) {
-  viewer.camera.flyHome(0);
+  // 默认定位到广东佛山
+  viewer.camera.flyTo({
+    destination: Cartesian3.fromDegrees(113.122717, 23.028762, 500000), // [经度, 纬度, 高度/米]
+    duration: 4 // 飞行动画时间（秒），0 表示瞬间到达
+  });
 }
 
 export function safeDestroy<
