@@ -30,6 +30,14 @@ export default {
       meta: {
         title: "绘制图形"
       }
+    },
+    {
+      path: "/cesium/rain",
+      name: "CesiumRain",
+      component: () => import("@/views/cesium/rain/index.vue"),
+      meta: {
+        title: "下雨效果"
+      }
     }
   ]
 } satisfies RouteConfigsTable;

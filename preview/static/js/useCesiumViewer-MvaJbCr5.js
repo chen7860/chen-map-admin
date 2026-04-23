@@ -1,1 +1,0 @@
-import{d as n}from"./index-Ba3CKjaB.js";import{s as t,f as l,g as i,i as f}from"./index-Bfu0BhoJ.js";function w(){const e=t(null),r=l(!1);function s(u){e.value=f(u),r.value=!0}function a(){r.value=!1,e.value=null}function o(){n(e.value),a()}return i(()=>{o()}),{viewer:e,ready:r,setViewer:s,clearViewer:a,destroy:o}}export{w as u};
