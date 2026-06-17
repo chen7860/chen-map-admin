@@ -1,0 +1,42 @@
+:root {
+  --vp-c-brand-1: #00a6ff;
+  --vp-c-brand-2: #00c2a8;
+  --vp-c-brand-3: #1677ff;
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(90deg, #00a6ff, #00c2a8);
+  --vp-home-hero-image-background-image: linear-gradient(
+    135deg,
+    rgba(0, 166, 255, 0.24),
+    rgba(0, 194, 168, 0.18)
+  );
+  --vp-home-hero-image-filter: blur(42px);
+}
+
+.VPHome .VPFeature {
+  border-radius: 8px;
+}
+
+.vp-doc .demo-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 8px 0 16px;
+  color: #fff;
+  text-decoration: none;
+  background: linear-gradient(90deg, #1677ff, #00c2a8);
+  border-radius: 6px;
+}
+
+.vp-doc .meta-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.vp-doc .meta-list li {
+  padding: 10px 12px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+}

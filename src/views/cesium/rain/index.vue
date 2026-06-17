@@ -1,71 +1,157 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
+import * as Cesium from "cesium";
 import type { Viewer } from "cesium";
 import ReCesiumMap from "@/components/ReCesiumMap";
 import { message } from "@/utils/message";
-import RainEffect from "@/utils/cesium/rainEffect";
+import WeatherEffect, {
+  type WeatherEffectOptions
+} from "@/utils/cesium/rainEffect";
 
 defineOptions({
   name: "CesiumRain"
 });
 
-const toolList = ["小雨", "中雨", "大雨"] as const;
-type ToolType = (typeof toolList)[number];
+const toolList = [
+  {
+    label: "小雨",
+    config: {
+      type: "rain",
+      tiltAngle: -0.12,
+      size: 1,
+      speed: 125,
+      density: 1.2,
+      opacity: 0.38
+    }
+  },
+  {
+    label: "中雨",
+    config: {
+      type: "rain",
+      tiltAngle: -0.18,
+      size: 0.62,
+      speed: 105,
+      density: 1.9,
+      opacity: 0.52
+    }
+  },
+  {
+    label: "大雨",
+    config: {
+      type: "rain",
+      tiltAngle: -0.26,
+      size: 0.34,
+      speed: 78,
+      density: 3.1,
+      opacity: 0.6
+    }
+  },
+  {
+    label: "小雪",
+    config: {
+      type: "snow",
+      tiltAngle: -0.12,
+      size: 1.22,
+      speed: 118,
+      density: 0.98,
+      opacity: 0.62
+    }
+  },
+  {
+    label: "大雪",
+    config: {
+      type: "snow",
+      tiltAngle: -0.24,
+      size: 1.12,
+      speed: 68,
+      density: 1.26,
+      opacity: 0.66
+    }
+  },
+  {
+    label: "刮风",
+    config: {
+      type: "wind",
+      tiltAngle: -0.42,
+      size: 0.88,
+      speed: 42,
+      density: 1.18,
+      opacity: 0.62
+    }
+  }
+] as const satisfies ReadonlyArray<{
+  label: string;
+  config: WeatherEffectOptions;
+}>;
+type ToolType = (typeof toolList)[number]["label"];
+
+const WEATHER_FLAT_PITCH_DEGREES = -16;
+const WEATHER_FLAT_MAX_HEIGHT = 1000;
 
 const active = ref<ToolType | "">("");
-let rainEffect: InstanceType<
-  typeof import("@/utils/cesium/rainEffect").default
-> | null = null;
+let weatherEffect: WeatherEffect | null = null;
+let viewer: Viewer | null = null;
 let isMapReady = false;
 
-function ensureRain() {
-  if (!rainEffect) {
-    rainEffect = new RainEffect();
-  }
-}
-
-function handleChangeTool(item: ToolType) {
+function handleChangeTool(item: (typeof toolList)[number]) {
   if (!isMapReady) {
     message("地图尚未初始化完成", { type: "warning" });
     return;
   }
 
-  ensureRain();
+  weatherEffect?.start(item.config);
+  flattenWeatherView(item.config.type);
+  active.value = item.label;
+}
 
-  switch (item) {
-    case "小雨":
-      rainEffect?.start({
-        tiltAngle: -0.1,
-        rainSize: 1,
-        rainSpeed: 120.0
-      });
-      break;
-    case "中雨":
-      rainEffect?.start({
-        tiltAngle: -0.1,
-        rainSize: 0.6,
-        rainSpeed: 120.0
-      });
-      break;
-    case "大雨":
-      rainEffect?.start({
-        tiltAngle: -0.1,
-        rainSize: 0.2,
-        rainSpeed: 120.0
-      });
-      break;
-  }
+function flattenWeatherView(type: WeatherEffectOptions["type"]) {
+  if (!viewer || type === "wind") return;
 
-  active.value = item;
+  const { camera } = viewer;
+  const cartographic = Cesium.Cartographic.fromCartesian(camera.positionWC);
+  const height = Math.min(cartographic.height, WEATHER_FLAT_MAX_HEIGHT);
+
+  camera.flyTo({
+    destination: Cesium.Cartesian3.fromRadians(
+      cartographic.longitude,
+      cartographic.latitude,
+      height
+    ),
+    orientation: {
+      heading: camera.heading,
+      pitch: Cesium.Math.toRadians(WEATHER_FLAT_PITCH_DEGREES),
+      roll: camera.roll
+    },
+    duration: 0.6
+  });
 }
 
 function handleStop() {
-  rainEffect?.stop();
+  weatherEffect?.stop();
   active.value = "";
 }
 
 function handleReady(instance: Viewer) {
-  (window as any).viewer = instance;
+  viewer = instance;
+  weatherEffect = new WeatherEffect(instance);
+  instance.scene.backgroundColor = Cesium.Color.fromCssColorString("#07111f");
+  instance.scene.globe.baseColor = Cesium.Color.fromCssColorString("#101c2c");
+  instance.scene.skyAtmosphere.saturationShift = -0.72;
+  instance.scene.skyAtmosphere.brightnessShift = -0.42;
+  instance.scene.atmosphere.saturationShift = -0.34;
+  instance.scene.atmosphere.brightnessShift = -0.18;
+  instance.scene.fog.enabled = true;
+  instance.scene.fog.density = 0.00042;
+  instance.scene.fog.minimumBrightness = 0.02;
+  instance.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(113.150014, 23.0498, 4200),
+    orientation: {
+      heading: Cesium.Math.toRadians(0),
+      pitch: Cesium.Math.toRadians(-42),
+      roll: 0
+    },
+    duration: 0
+  });
   isMapReady = true;
 }
 
@@ -74,7 +160,9 @@ function handleError(error: unknown) {
 }
 
 onBeforeUnmount(() => {
-  rainEffect?.stop();
+  weatherEffect?.stop();
+  weatherEffect = null;
+  viewer = null;
   isMapReady = false;
 });
 </script>
@@ -85,11 +173,11 @@ onBeforeUnmount(() => {
       <div class="list">
         <div
           v-for="item in toolList"
-          :key="item"
-          :class="{ item: true, active: active === item }"
+          :key="item.label"
+          :class="{ item: true, active: active === item.label }"
           @click="handleChangeTool(item)"
         >
-          {{ item }}
+          {{ item.label }}
         </div>
       </div>
       <div class="clear" @click="handleStop">关闭</div>

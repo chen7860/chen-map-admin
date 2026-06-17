@@ -16,6 +16,30 @@ export default {
       }
     },
     {
+      path: "/cesium/city-dashboard",
+      name: "CesiumCityDashboard",
+      component: () => import("@/views/cesium/cityDashboard/index.vue"),
+      meta: {
+        title: "城市态势"
+      }
+    },
+    {
+      path: "/cesium/flow-line",
+      name: "CesiumFlowLine",
+      component: () => import("@/views/cesium/flowLine/index.vue"),
+      meta: {
+        title: "飞线轨迹"
+      }
+    },
+    {
+      path: "/cesium/excavation",
+      name: "CesiumExcavation",
+      component: () => import("@/views/cesium/excavation/index.vue"),
+      meta: {
+        title: "地形开挖"
+      }
+    },
+    {
       path: "/cesium/material",
       name: "CesiumMaterial",
       component: () => import("@/views/cesium/material/index.vue"),
