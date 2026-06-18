@@ -1,0 +1,1 @@
+import{_ as e,o as d,c as o,a2 as a}from"./chunks/framework.BZO4qERu.js";const h=JSON.parse('{"title":"Demo 索引","description":"","frontmatter":{},"headers":[],"relativePath":"demos.md","filePath":"demos.md"}'),r={name:"demos.md"};function c(s,t,m,i,n,l){return d(),o("div",null,[...t[0]||(t[0]=[a("",4)])])}const p=e(r,[["render",c]]);export{h as __pageData,p as default};
