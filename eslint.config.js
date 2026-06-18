@@ -12,6 +12,7 @@ export default defineConfig([
     "dist/*",
     "*.d.ts",
     "public/*",
+    "preview/static/**",
     "src/assets/**",
     "src/**/iconfont/**"
   ]),
