@@ -60,6 +60,15 @@ export default {
         title: "地图交互增强",
         showParent: true
       }
+    },
+    {
+      path: "/leaflet/vector-tile",
+      name: "LeafletVectorTile",
+      component: () => import("@/views/leaflet/vectorTile/index.vue"),
+      meta: {
+        title: "PBF 矢量瓦片",
+        showParent: true
+      }
     }
   ]
 } satisfies RouteConfigsTable;

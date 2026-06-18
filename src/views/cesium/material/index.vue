@@ -1,39 +1,46 @@
 <script setup lang="ts">
 import type { Viewer } from "cesium";
+import { CesiumFlowLineController } from "chw-gis-lodash/cesium";
 import ReCesiumMap from "@/components/ReCesiumMap";
+import { message } from "@/utils/message";
 import { useCesiumViewer } from "../hooks/useCesiumViewer";
-import { useMaterial } from "../hooks/useMaterial";
 
 defineOptions({
   name: "CesiumMaterial"
 });
 
 const { viewer, setViewer } = useCesiumViewer();
-const materialDemo = useMaterial();
+const flowLine = new CesiumFlowLineController({
+  // 提示文案已内置为默认值，这里只负责展示；
+  // 如需自定义文案传 messages，需要额外逻辑用 onDrawStart/onDrawComplete/onDrawCancel
+  onMessage(text, type) {
+    message(text, { type });
+  }
+});
 
-async function handleReady(instance: Viewer) {
-  materialDemo.destroy(viewer.value);
+function handleReady(instance: Viewer) {
+  flowLine.destroy(viewer.value);
   setViewer(instance);
-  await materialDemo.init(instance);
+  flowLine.init(instance);
 }
 
 function handleError(error: unknown) {
   console.error("Cesium material init failed", error);
+}
+
+function clearPath() {
+  flowLine.clearPath();
+  message("轨迹已清除", { type: "success" });
 }
 </script>
 
 <template>
   <div class="cesium-page">
     <div class="cesium-page__toolbar">
-      <el-button
-        type="primary"
-        @click="() => materialDemo.startDrawing(viewer)"
-      >
+      <el-button type="primary" @click="() => flowLine.startDrawing()">
         开始绘制流动线
       </el-button>
-      <el-button type="danger" plain @click="() => materialDemo.clearPath()">
-        清除轨迹
-      </el-button>
+      <el-button type="danger" plain @click="clearPath"> 清除轨迹 </el-button>
     </div>
     <div class="cesium-page__map">
       <ReCesiumMap height="100%" @ready="handleReady" @error="handleError" />
@@ -61,8 +68,8 @@ function handleError(error: unknown) {
   }
 
   &__map {
-    flex: 1;
     position: relative;
+    flex: 1;
     overflow: hidden;
     border-radius: 8px;
   }

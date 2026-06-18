@@ -1,6 +1,13 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { getPluginsList } from "./build/plugins";
 import { include, exclude } from "./build/optimize";
-import { type UserConfigExport, type ConfigEnv, loadEnv } from "vite";
+import {
+  type UserConfigExport,
+  type ConfigEnv,
+  type PluginOption,
+  loadEnv
+} from "vite";
 
 import {
   root,
@@ -9,6 +16,26 @@ import {
   pathResolve,
   __APP_INFO__
 } from "./build/utils";
+
+// 开发服务器：对 public 下不存在的 .pbf 矢量瓦片返回 404，
+// 避免 Vite SPA 回退把 index.html 当瓦片返回（否则矢量瓦片解析报 Unimplemented type）。
+const missingPbf404Plugin: PluginOption = {
+  name: "missing-pbf-404",
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      const path = req.url?.split("?")[0] ?? "";
+      if (path.endsWith(".pbf")) {
+        const filePath = join(root, "public", decodeURIComponent(path));
+        if (!existsSync(filePath)) {
+          res.statusCode = 404;
+          res.end();
+          return;
+        }
+      }
+      next();
+    });
+  }
+};
 
 export default ({ mode }: ConfigEnv): UserConfigExport => {
   const { VITE_CDN, VITE_PORT, VITE_COMPRESSION, VITE_PUBLIC_PATH } =
@@ -31,7 +58,10 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
         clientFiles: ["./index.html", "./src/{views,components}/*"]
       }
     },
-    plugins: getPluginsList(VITE_CDN, VITE_COMPRESSION),
+    plugins: [
+      missingPbf404Plugin,
+      ...getPluginsList(VITE_CDN, VITE_COMPRESSION)
+    ],
     // https://cn.vitejs.dev/config/dep-optimization-options.html#dep-optimization-options
     optimizeDeps: {
       include,

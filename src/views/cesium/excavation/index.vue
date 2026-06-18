@@ -1,24 +1,29 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { Viewer } from "cesium";
+import { CesiumExcavation } from "chw-gis-lodash/cesium";
 import ReCesiumMap from "@/components/ReCesiumMap";
 import { message } from "@/utils/message";
 import { useCesiumViewer } from "../hooks/useCesiumViewer";
-import { useExcavation } from "../hooks/useExcavation";
 
 defineOptions({
   name: "CesiumExcavation"
 });
 
-const { viewer, setViewer } = useCesiumViewer();
-const excavation = useExcavation();
+const { setViewer } = useCesiumViewer();
 const activeDepth = ref(80);
 const isBoxSelecting = ref(false);
+let excavation: CesiumExcavation | null = null;
 
 function handleReady(instance: Viewer) {
-  excavation.destroy(viewer.value);
+  excavation?.destroy();
   setViewer(instance);
-  excavation.init(instance);
+  excavation = new CesiumExcavation(instance, {
+    defaultDepth: activeDepth.value
+  });
+  excavation.onBoxSelectChange((selecting: boolean) => {
+    isBoxSelecting.value = selecting;
+  });
 }
 
 function handleError(error: unknown) {
@@ -26,22 +31,22 @@ function handleError(error: unknown) {
 }
 
 function changeDepth(depth: number) {
+  if (depth == null || Number.isNaN(depth)) return;
   activeDepth.value = depth;
-  excavation.render(depth);
+  excavation?.setDepth(depth);
 }
 
 function toggleBoxSelect() {
+  if (!excavation) return;
+
   if (isBoxSelecting.value) {
     excavation.stopBoxSelect();
-    isBoxSelecting.value = false;
     return;
   }
 
-  isBoxSelecting.value = excavation.startBoxSelect(() => {
-    isBoxSelecting.value = false;
-  });
+  excavation.startBoxSelect();
 
-  if (isBoxSelecting.value) {
+  if (excavation.isBoxSelecting()) {
     message("框选模式已开启：在地图上按住鼠标左键拖拽，松开后生成开挖范围", {
       type: "info"
     });
@@ -69,15 +74,16 @@ function toggleBoxSelect() {
         按住鼠标左键拖拽框选，松开完成
       </div>
       <div class="depth-actions">
-        <el-button
-          v-for="depth in excavation.depthOptions"
-          :key="depth"
+        <el-input-number
+          v-model="activeDepth"
+          :min="1"
+          :max="100000"
+          :step="10"
+          controls-position="right"
           size="small"
-          :type="activeDepth === depth ? 'primary' : 'default'"
-          @click="changeDepth(depth)"
-        >
-          {{ depth }}m
-        </el-button>
+          @change="changeDepth"
+        />
+        <span class="depth-unit">m</span>
       </div>
       <el-button
         size="small"
@@ -86,9 +92,9 @@ function toggleBoxSelect() {
       >
         {{ isBoxSelecting ? "取消框选" : "框选范围" }}
       </el-button>
-      <el-button size="small" plain @click="excavation.flyHome">
+      <!-- <el-button size="small" plain @click="excavation.flyHome">
         回到视角
-      </el-button>
+      </el-button> -->
     </section>
   </div>
 </template>
@@ -131,7 +137,7 @@ function toggleBoxSelect() {
   }
 
   strong {
-    color: #ffffff;
+    color: #fff;
   }
 
   span {
@@ -150,7 +156,13 @@ function toggleBoxSelect() {
 .depth-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
   margin-bottom: 10px;
+
+  .depth-unit {
+    font-size: 13px;
+    color: #33d6ff;
+  }
 }
 
 .select-tip {
