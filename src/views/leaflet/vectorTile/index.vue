@@ -10,7 +10,7 @@ defineOptions({
   name: "LeafletVectorTile"
 });
 
-const defaultUrl = "/pdf/1958402946340061186/{z}/{x}/{y}.pbf";
+const defaultUrl = `${import.meta.env.BASE_URL}pdf/1958402946340061186/{z}/{x}/{y}.pbf`;
 
 const dataBounds: [[number, number], [number, number]] = [
   [22.9989, 113.1152],
